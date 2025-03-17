@@ -1,0 +1,60 @@
+openapi: 3.1.1
+
+info:
+  title: Hubtiger API
+  description: Reverse engineered API for Hubtiger.
+  version: 0.0.1
+
+servers:
+  - url: https://hubtiger-api.azurewebsites.net/api
+
+paths:
+  /Auth/ValidateLogin:
+    post:
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Hardcoded device code.
+          example: GthWdlDPlDOHgOm8xnueh2SbTVFoesHkCk2EprTXcowNFm66zfr2NQ==
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                skipped:
+                  type: boolean
+            example:
+              username: john.doe@example.com
+              password: password
+              skipped: false
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userName:
+                    type: string
+                  token:
+                    type: string
+                  legacyToken:
+                    type: string
+                example:
+                  userName: john.doe@example.com
+                  token: abc
+                  legacyToken: def
+        '404':
+          description: Not found.
+        '429':
+          description: Too many requests.
