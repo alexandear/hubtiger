@@ -1,24 +1,32 @@
-openapi: 3.1.1
+openapi: 3.0.1
 
 info:
-  title: Hubtiger API
-  description: Reverse engineered API for Hubtiger.
+  title: Unofficial Hubtiger API
+  description: Unofficial API for the [Hubtiger Platform](https://hubtiger.com/).
   version: 0.0.1
+  license:
+    name: The Unlicense
+    url: https://unlicense.org
 
 servers:
   - url: https://hubtiger-api.azurewebsites.net/api
+    description: Production server.
+
+tags:
+  - name: auth
+  - name: profile
+  - name: bikes
+  - name: rides
+  - name: components
+  - name: services
 
 paths:
   /Auth/ValidateLogin:
     post:
+      summary: Retrieve a JWT token from username and password.
+      tags: [auth]
       parameters:
-        - name: code
-          in: query
-          required: true
-          schema:
-            type: string
-          description: Hardcoded device code.
-          example: GthWdlDPlDOHgOm8xnueh2SbTVFoesHkCk2EprTXcowNFm66zfr2NQ==
+        - $ref: '#/components/parameters/queryCode'
       requestBody:
         content:
           application/json:
@@ -27,15 +35,23 @@ paths:
               properties:
                 username:
                   type: string
+                  maxLength: 50
                 password:
                   type: string
                   format: password
+                  maxLength: 50
                 skipped:
                   type: boolean
+              required:
+                - username
+                - password
+                - skipped
+              additionalProperties: false
             example:
               username: john.doe@example.com
               password: password
               skipped: false
+      security: []
       responses:
         '200':
           description: OK.
@@ -45,16 +61,756 @@ paths:
                 type: object
                 properties:
                   userName:
+                    description: The same as 'username'.
                     type: string
+                    maxLength: 50
                   token:
+                    description: JWT token.
                     type: string
+                    maxLength: 5000
+                    example: |
+                      {
+                        "header": {
+                          "alg": "HS256",
+                          "typ": "JWT"
+                        },
+                        "payload": {
+                          "Username": "john.doe@example.com",
+                          "ID": "2700911",
+                          "IsSuperUser": "False",
+                          "PartnerID": "0",
+                          "TechnicianID": "0",
+                          "nbf": 1742292443,
+                          "exp": 1900058843,
+                          "iat": 1742292443
+                        }
+                      }
                   legacyToken:
+                    description: Proprietary token.
                     type: string
+                    maxLength: 5000
+                additionalProperties: false
                 example:
                   userName: john.doe@example.com
                   token: abc
                   legacyToken: def
         '404':
-          description: Not found.
+          $ref: '#/components/responses/404NotFound'
         '429':
-          description: Too many requests.
+          $ref: '#/components/responses/429TooManyRequests'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/Profile:
+    get:
+      summary: Retrieve the profile of the authenticated user.
+      tags: [profile]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  name:
+                    type: string
+                  salutation:
+                    type: string
+                  surname:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  gender:
+                    type: string
+                    enum:
+                      - "Male"
+                      - "Female"
+                  phoneNumber:
+                    type: string
+                    nullable: true
+                  userName:
+                    type: string
+                  dateOfBirth:
+                    type: string
+                    nullable: true
+                  imageURL:
+                    type: string
+                    format: uri
+                  unitsOfMeasure:
+                    type: string
+                    enum:
+                      - "Metric"
+                      - "Imperial"
+                  linkedToTracker:
+                    type: boolean
+                  locale:
+                    type: string
+                    example: en
+                  riderType:
+                    type: integer
+                  isBikeShopUser:
+                    type: boolean
+                  linkedPartnerID:
+                    type: integer
+                  daysSinceFirstUse:
+                    type: integer
+                  requestRatingDays:
+                    type: integer
+                  lastRating:
+                    type: string
+                    nullable: true
+                required:
+                  - name
+                  - salutation
+                  - surname
+                  - email
+                  - phoneNumber
+                  - userName
+                  - gender
+                  - dateOfBirth
+                  - imageURL
+                  - unitsOfMeasure
+                  - linkedToTracker
+                  - locale
+                  - riderType
+                  - isBikeShopUser
+                  - linkedPartnerID
+                  - daysSinceFirstUse
+                  - requestRatingDays
+                  - lastRating
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /V2/Athlete/MyFeed:
+    get:
+      summary: Retrieve the home page of the authenticated user.
+      description: Retrieve the latest ride with bike components information.
+      tags: [profile]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+      responses:
+        '200':
+          description: OK.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    Date:
+                      type: string
+                    Type:
+                      type: string
+                      enum:
+                        - LAST_RIDE
+                    LastRide:
+                      type: object
+                      properties:
+                        ID:
+                          description: Unique identifier of the ride.
+                          type: integer
+                        Name:
+                          description: Ride name.
+                          type: string
+                        Distance:
+                          description: Total distance of the ride in km.
+                          type: number
+                          example: 2.31
+                        Time:
+                          description: Total duration of the ride in hours and minutes.
+                          type: string
+                          example: 00:08
+                        AverageSpeed:
+                          description: In km/h.
+                          type: number
+                          example: 17.01
+                        BikeID:
+                          description: Unique identifier of the bike.
+                          type: integer
+                        Bike:
+                          description: Bike name.
+                          type: string
+                        Date:
+                          description: Start ride date and time.
+                          type: string
+                          format: date-time
+                          example: 2021-06-01T00:00:00
+                        RouteAvailable:
+                          type: boolean
+                        StravaRide:
+                          description: Is imported from Strava.
+                          type: boolean
+                        Components:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              ID:
+                                description: Unique identifier of the component.
+                                type: integer
+                              GearID:
+                                type: integer
+                              RideID:
+                                description: Unique identifier of the ride.
+                                type: integer
+                              BikeID:
+                                description: Unique identifier of the bike.
+                                type: integer
+                              ComponentTypeID:
+                                type: integer
+                              Type:
+                                description: Component type.
+                                type: string
+                                example: Tubeless Sealant
+                              Manufacturer:
+                                description: Component manufacturer.
+                                type: string
+                                example: Muc-Off
+                              Model:
+                                description: Component model.
+                                type: string
+                                example: Road & Gravel Tubeless Sealant
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/Bikes:
+    get:
+      summary: Retrieve the list of bikes of the authenticated user.
+      tags: [bikes]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bike'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/RetiredBikes:
+    get:
+      summary: Retrieve the list of all retired bikes of the authenticated user.
+      tags: [bikes]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bike'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/Bike/{bikeId}:
+    get:
+      summary: Retrieve the details of a bike.
+      tags: [bikes]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - $ref: '#/components/parameters/pathBikeId'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bike'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/Bikes/Rides:
+    get:
+      summary: Retrieve the list of all rides for the bike of the authenticated user.
+      tags: [rides]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - $ref: '#/components/parameters/queryBikeId'
+        - name: page
+          in: query
+          description: Page number.
+          required: false
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ride'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/Bikes/Components:
+    get:
+      summary: Retrieve the list of components for the bike of the authenticated user.
+      tags: [components]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - $ref: '#/components/parameters/queryBikeId'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComponentExtended'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /v3.0/Athlete/Bikes/Services:
+    get:
+      summary: Retrieve the list of services for the bike of the authenticated user.
+      tags: [services]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - $ref: '#/components/parameters/queryBikeId'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    queryCode:
+      name: code
+      description: Hardcoded device code.
+      in: query
+      required: true
+      schema:
+        type: string
+      example: GthWdlDPlDOHgOm8xnueh2SbTVFoesHkCk2EprTXcowNFm66zfr2NQ==
+    pathBikeId:
+      name: bikeId
+      description: Unique identifier of the bike.
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1836144
+    queryBikeId:
+      name: bikeID
+      description: Unique identifier of the bike.
+      in: query
+      required: true
+      schema:
+        type: integer
+      example: 1836144
+
+  schemas:
+    Bike:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          description: Unique identifier of the bike.
+          type: integer
+        nickname:
+          description: Bike name.
+          type: string
+        colour:
+          type: string
+        km:
+          description: Bike mileage in km.
+          type: integer
+          example: 2045
+        movingTime:
+          description: Total duration of the ride in hours.
+          type: integer
+          example: 73
+        openingKm:
+          type: integer
+        openingHours:
+          type: integer
+        hoursToNextService:
+          type: integer
+        kmToNextService:
+          description: Remaining mileage to the next service in km.
+          type: integer
+          example: 764
+        kmSinceLastService:
+          description: Mileage since the last service in km.
+          type: integer
+          example: 20
+        movingTimeSinceLastService:
+          description: Total duration of the ride since the last service in hours.
+          type: integer
+          example: 1
+        lastService:
+          description: Last service date.
+          type: string
+          format: date-time
+          example: 2025-03-15T00:00:00
+        dateBought:
+          description: Purchase date.
+          type: string
+          format: date-time
+          example: 2024-04-25T00:00:00
+        manufacturer:
+          description: Bike manufacturer.
+          type: string
+          example: Giant.
+        model:
+          description: Bike model.
+          type: string
+          example: Propel Advanced Pro 1.
+        year:
+          description: Bike model year.
+          type: integer
+          example: 2023
+        serialNumber:
+          description: Bike serial number.
+          type: string
+        imageURL:
+          description: Bike photo URL.
+          type: string
+          format: uri
+          example: https://hubtiger.blob.core.windows.net/bikes/1836144_638607245108908098.jpg
+        dueForService:
+          type: boolean
+        requiresSetup:
+          type: boolean
+        serviceScoreKm:
+          type: integer
+          example: 34
+        serviceScoreHours:
+          type: integer
+          example: 100
+        serviceScoreMonths:
+          type: integer
+        tracker:
+          type: string
+          enum:
+            - Strava
+        typeID:
+          type: integer
+          example: 1
+        components:
+          description: Number of components of the bike.
+          type: integer
+          example: 11
+    ComponentBase:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          description: Unique identifier of the component.
+          type: integer
+          example: 79083404
+        rideID:
+          description: Unique identifier of the ride.
+          type: integer
+          example: 5295611
+        bikeID:
+          description: Unique identifier of the bike.
+          type: integer
+          example: 1836146
+        componentTypeID:
+          type: integer
+          example: 0
+        type:
+          description: Component type.
+          type: string
+          example: Tubeless Sealant
+        manufacturer:
+          description: Component manufacturer.
+          type: string
+          example: Muc-Off
+        model:
+          description: Component model.
+          type: string
+          example: Road & Gravel Tubeless Sealant
+    ComponentExtended:
+      allOf:
+        - $ref: '#/components/schemas/ComponentBase'
+        - type: object
+          properties:
+            status:
+              type: string
+              enum:
+                - Active
+            dateAdded:
+              description: Date added to the bike.
+              type: string
+              format: date-time
+              example: 2024-08-21T00:00:00
+            openingKm:
+              type: integer
+            openingHours:
+              type: integer
+            totalKm:
+              type: integer
+              example: 2045
+            totalHours:
+              type: integer
+              example: 73
+            kmSinceLastService:
+              description: Mileage since the last service in km.
+              type: integer
+              example: 854
+            hoursSinceLastService:
+              description: Total duration of the ride since the last service in hours.
+              type: integer
+              example: 30
+            monthsSinceLastService:
+              description: Months since the last service.
+              type: integer
+              example: 6
+            lastService:
+              description: Last service date.
+              type: string
+              format: date-time
+              example: 2024-09-28T00:00:00
+            kmServiceIntervals:
+              description: Service intervals in km.
+              type: integer
+              example: 1000
+            hoursServiceIntervals:
+              description: Service intervals in hours.
+              type: integer
+              example: 50
+            monthsServiceIntervals:
+              description: Service intervals in months.
+              type: integer
+              example: 6
+            dueForService:
+              type: boolean
+            serviceScore:
+              type: integer
+              example: 80
+            default:
+              type: boolean
+            serviceInterval:
+              description: Service interval in serviceTimeframe.
+              type: integer
+              example: 1000
+            serviceTimeframe:
+              type: string
+              enum:
+                - km
+            defaultComponent:
+              type: boolean
+            excludeRideKeywords:
+              type: string
+            lastRideDate:
+              description: Last ride date and time.
+              type: string
+              format: date-time
+              example: 2025-03-14T14:19:47
+            retiredDate:
+              type: string
+              format: date-time
+              nullable: true
+            invoiceLineItemID:
+              type: integer
+    Ride:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          description: Unique identifier of the ride.
+          type: integer
+          example: 12773965
+        name:
+          description: Ride name.
+          type: string
+          example: Evening Gravel Ride
+        distance:
+          description: Total distance of the ride in km.
+          type: number
+          example: 2.31
+        time:
+          description: Total duration of the ride in hours and minutes.
+          type: string
+          example: 00:08
+        averageSpeed:
+          description: In km/h.
+          type: number
+          example: 17.01
+        bikeID:
+          description: Unique identifier of the bike.
+          type: integer
+        bike:
+          description: Bike name.
+          type: string
+          example: Giant Propel Advanced Pro 1
+        date:
+          description: Start ride date and time.
+          type: string
+          format: date-time
+          example: 2021-06-01T00:00:00
+        routeAvailable:
+          type: boolean
+        stravaRide:
+          description: Is imported from Strava.
+          type: boolean
+        components:
+          type: array
+          items:
+            type: object
+            properties:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ComponentBase'
+                  - type: object
+                    properties:
+                      gearID:
+                        type: integer
+    Service:
+      type: object
+      additionalProperties: false
+      properties:
+        bikeServiceLogID:
+          type: integer
+          example: 2419266
+        serviceID:
+          type: integer
+          example: 0
+        type:
+          type: string
+          enum:
+            - Logged Service
+        partner:
+          type: object
+          additionalProperties: false
+          properties:
+            partnerName:
+              type: string
+              example: Self Service
+            partnerLogo:
+              type: string
+              format: uri
+              nullable: true
+            partnerID:
+              type: integer
+              example: 0
+        bike:
+          type: object
+          additionalProperties: false
+          properties:
+            bikeID:
+              description: Unique identifier of the bike.
+              type: integer
+              example: 1836144
+            name:
+              type: string
+              example: Giant Propel Advanced Pro 1
+            bikeTypeID:
+              type: integer
+              example: 1
+            imageURL:
+              description: Bike photo URL.
+              type: string
+              format: uri
+              example: https://hubtiger.blob.core.windows.net/bikes/1836144_638607245108908098.jpg
+        jobCardID:
+          type: integer
+          nullable: true
+        serviceDate:
+          description: Service date.
+          type: string
+          format: date-time
+          example: 2025-03-15T00:00:00
+        serviceTypes:
+          type: string
+        customerNote:
+          type: string
+        externalNote:
+          type: string
+        rating:
+          type: integer
+        invoiceCurrencySymbol:
+          type: string
+          nullable: true
+        invoiceAmount:
+          type: integer
+        servicedGear:
+          type: array
+          items:
+            type: object
+        mileage:
+          description: Mileage of the bike at the time of the service.
+          type: integer
+          example: 1265
+        rideHours:
+          type: integer
+          example: 163544
+        serviceAttachments:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              id:
+                description: Unique identifier of the attachment.
+                type: integer
+              serviceLogID:
+                type: integer
+              serviceID:
+                type: integer
+              mediaType:
+                type: string
+                example: image/jpeg
+              mediaURL:
+                description: Attachment URL.
+                type: string
+                format: uri
+                example: https://hubtiger.blob.core.windows.net/serviceattachments/1836144/IMG_7009.HEIC
+              fileName:
+                description: Attachment file name.
+                type: string
+                example: IMG_7009.HEIC
+        statusID:
+          type: integer
+        askForApproval:
+          type: integer
+        sentApproval:
+          type: integer
+        paid:
+          type: integer
+        statusDescription:
+          type: string
+          example: Created
+
+  responses:
+    404NotFound:
+      description: Not found.
+    429TooManyRequests:
+      description: Too many requests.
+    UnexpectedError:
+      description: Unexpected error.
+
+security:
+  - bearerAuth: []
