@@ -295,6 +295,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Bike'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
         default:
           $ref: '#/components/responses/UnexpectedError'
 
@@ -313,6 +315,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Bike'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
         default:
           $ref: '#/components/responses/UnexpectedError'
 
@@ -330,6 +334,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Bike'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
         default:
           $ref: '#/components/responses/UnexpectedError'
 
@@ -356,6 +362,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Ride'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
         default:
           $ref: '#/components/responses/UnexpectedError'
 
@@ -375,6 +383,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ComponentExtended'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
         default:
           $ref: '#/components/responses/UnexpectedError'
 
@@ -394,6 +404,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Service'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
         default:
           $ref: '#/components/responses/UnexpectedError'
 
@@ -805,6 +817,13 @@ components:
           example: Created
 
   responses:
+    400BadRequest:
+      description: Bad request.
+      content:
+        application/json:
+          schema:
+            type: string
+            example: Please add the bearer token to the header
     404NotFound:
       description: Not found.
     429TooManyRequests:
