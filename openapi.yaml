@@ -442,6 +442,15 @@ components:
       example: 1836144
 
   schemas:
+    WithBikeID:
+      type: object
+      required:
+        - bikeID
+      properties:
+        bikeID:
+          description: Unique identifier of the bike.
+          type: integer
+          example: 1836146
     Bike:
       type: object
       additionalProperties: false
@@ -534,36 +543,34 @@ components:
           type: integer
           example: 11
     ComponentBase:
-      type: object
-      additionalProperties: false
-      properties:
-        id:
-          description: Unique identifier of the component.
-          type: integer
-          example: 79083404
-        rideID:
-          description: Unique identifier of the ride.
-          type: integer
-          example: 5295611
-        bikeID:
-          description: Unique identifier of the bike.
-          type: integer
-          example: 1836146
-        componentTypeID:
-          type: integer
-          example: 0
-        type:
-          description: Component type.
-          type: string
-          example: Tubeless Sealant
-        manufacturer:
-          description: Component manufacturer.
-          type: string
-          example: Muc-Off
-        model:
-          description: Component model.
-          type: string
-          example: Road & Gravel Tubeless Sealant
+      allOf:
+        - $ref: "#/components/schemas/WithBikeID"
+        - type: object
+          additionalProperties: false
+          properties:
+            id:
+              description: Unique identifier of the component.
+              type: integer
+              example: 79083404
+            rideID:
+              description: Unique identifier of the ride.
+              type: integer
+              example: 5295611
+            componentTypeID:
+              type: integer
+              example: 0
+            type:
+              description: Component type.
+              type: string
+              example: Tubeless Sealant
+            manufacturer:
+              description: Component manufacturer.
+              type: string
+              example: Muc-Off
+            model:
+              description: Component model.
+              type: string
+              example: Road & Gravel Tubeless Sealant
     ComponentExtended:
       allOf:
         - $ref: '#/components/schemas/ComponentBase'
@@ -648,58 +655,57 @@ components:
             invoiceLineItemID:
               type: integer
     Ride:
-      type: object
-      additionalProperties: false
-      properties:
-        id:
-          description: Unique identifier of the ride.
-          type: integer
-          example: 12773965
-        name:
-          description: Ride name.
-          type: string
-          example: Evening Gravel Ride
-        distance:
-          description: Total distance of the ride in km.
-          type: number
-          example: 2.31
-        time:
-          description: Total duration of the ride in hours and minutes.
-          type: string
-          example: 00:08
-        averageSpeed:
-          description: In km/h.
-          type: number
-          example: 17.01
-        bikeID:
-          description: Unique identifier of the bike.
-          type: integer
-        bike:
-          description: Bike name.
-          type: string
-          example: Giant Propel Advanced Pro 1
-        date:
-          description: Start ride date and time.
-          type: string
-          format: date-time
-          example: 2021-06-01T00:00:00
-        routeAvailable:
-          type: boolean
-        stravaRide:
-          description: Is imported from Strava.
-          type: boolean
-        components:
-          type: array
-          items:
-            type: object
-            properties:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ComponentBase'
-                  - type: object
-                    properties:
-                      gearID:
-                        type: integer
+      allOf:
+        - $ref: "#/components/schemas/WithBikeID"
+        - type: object
+          additionalProperties: false
+          properties:
+            id:
+              description: Unique identifier of the ride.
+              type: integer
+              example: 12773965
+            name:
+              description: Ride name.
+              type: string
+              example: Evening Gravel Ride
+            distance:
+              description: Total distance of the ride in km.
+              type: number
+              example: 2.31
+            time:
+              description: Total duration of the ride in hours and minutes.
+              type: string
+              example: 00:08
+            averageSpeed:
+              description: In km/h.
+              type: number
+              example: 17.01
+            bike:
+              description: Bike name.
+              type: string
+              example: Giant Propel Advanced Pro 1
+            date:
+              description: Start ride date and time.
+              type: string
+              format: date-time
+              example: 2021-06-01T00:00:00
+            routeAvailable:
+              type: boolean
+            stravaRide:
+              description: Is imported from Strava.
+              type: boolean
+            components:
+              type: array
+              items:
+                type: object
+                properties:
+                  schema:
+                    allOf:
+                      - $ref: '#/components/schemas/ComponentBase'
+                      - type: object
+                        properties:
+                          gearID:
+                            type: integer
     Service:
       type: object
       additionalProperties: false
@@ -729,24 +735,22 @@ components:
               type: integer
               example: 0
         bike:
-          type: object
-          additionalProperties: false
-          properties:
-            bikeID:
-              description: Unique identifier of the bike.
-              type: integer
-              example: 1836144
-            name:
-              type: string
-              example: Giant Propel Advanced Pro 1
-            bikeTypeID:
-              type: integer
-              example: 1
-            imageURL:
-              description: Bike photo URL.
-              type: string
-              format: uri
-              example: https://hubtiger.blob.core.windows.net/bikes/1836144_638607245108908098.jpg
+          allOf:
+            - $ref: "#/components/schemas/WithBikeID"
+            - type: object
+              additionalProperties: false
+              properties:
+                name:
+                  type: string
+                  example: Giant Propel Advanced Pro 1
+                bikeTypeID:
+                  type: integer
+                  example: 1
+                imageURL:
+                  description: Bike photo URL.
+                  type: string
+                  format: uri
+                  example: https://hubtiger.blob.core.windows.net/bikes/1836144_638607245108908098.jpg
         jobCardID:
           type: integer
           nullable: true
