@@ -23,6 +23,7 @@ tags:
 paths:
   /Auth/ValidateLogin:
     post:
+      operationId: postAuthValidateLogin
       summary: Retrieve a JWT token from username and password.
       tags: [auth]
       parameters:
@@ -282,6 +283,7 @@ paths:
 
   /Athlete/Bikes:
     get:
+      operationId: getAthleteBikes
       summary: Retrieve the list of bikes of the authenticated user.
       tags: [bikes]
       parameters:
@@ -341,6 +343,7 @@ paths:
 
   /Athlete/Bikes/Rides:
     get:
+      operationId: getAthleteBikesRides
       summary: Retrieve the list of all rides for the bike of the authenticated user.
       tags: [rides]
       parameters:

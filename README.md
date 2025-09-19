@@ -13,6 +13,8 @@
 
 ## Examples
 
-Method          | Hubtiger App                                           | GET /Athlete/Bike/{bikeId}                     |
-----------------| ------------------------------------------------------ | ---------------------------------------------- |
-Bike rides      | <img src="images/app_bike_rides.png"> | <img src="images/openapi_bike_rides.png"> |
+Action | Hubtiger App | Hubtiger API Request |
+-------| ------------ | ----------------------- |
+Sign In | ![Sign In](images/app_postAuthValidateLogin.png) | `POST /Auth/ValidateLogin` |
+List all bikes | ![App bikes](images/app_getAthleteBikes.png) | `GET /Athlete/Bikes` |
+List bike rides | ![App bike rides](images/app_getAthleteBikesRides.png) | `GET /Athlete/Bike/{bikeId}` |
