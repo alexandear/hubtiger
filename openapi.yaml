@@ -19,6 +19,7 @@ tags:
   - name: rides
   - name: components
   - name: services
+  - name: notifications
 
 paths:
   /Auth/ValidateLogin:
@@ -349,13 +350,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/queryCode'
         - $ref: '#/components/parameters/queryBikeId'
-        - name: page
-          in: query
-          description: Page number.
-          required: false
-          schema:
-            type: integer
-            example: 1
+        - $ref: '#/components/parameters/queryPage'
       responses:
         '200':
           description: OK.
@@ -412,6 +407,231 @@ paths:
         default:
           $ref: '#/components/responses/UnexpectedError'
 
+  /v4.0/Athlete/Bikes:
+    get:
+      summary: Retrieve the list of bikes of the authenticated user.
+      tags: [bikes]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - name: locale
+          in: query
+          description: Device locale.
+          required: false
+          schema:
+            type: string
+          example: en_US@rg=uazzzz
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bike'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/Rides:
+    get:
+      summary: Retrieve the list of rides on all bikes of the authenticated user.
+      tags: [rides]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - $ref: '#/components/parameters/queryPage'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ride'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /v4.0/Athlete/Bikes/Components:
+    get:
+      summary: Retrieve the list of components for the bike of the authenticated user.
+      tags: [components]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - $ref: '#/components/parameters/queryBikeId'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BikeComponent'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /v3.0/Athlete/Bike/Component:
+    get:
+      summary: Retrieve the details of a component.
+      tags: [components]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - name: ComponentID
+          in: query
+          description: Unique identifier of the component.
+          required: true
+          schema:
+            type: integer
+          example: 5295613
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BikeComponent'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/Bikes/Retired/Components:
+    get:
+      summary: Retrieve the list of retired components of a type for the bike of the authenticated user.
+      tags: [components]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - $ref: '#/components/parameters/queryBikeId'
+        - name: TypeDescription
+          in: query
+          description: Component type.
+          required: true
+          schema:
+            type: string
+          example: Chain Frame Protector
+      responses:
+        '200':
+          description: OK. Only empty lists were observed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /v2/Components/Types:
+    get:
+      summary: Retrieve the list of component types for a bike type.
+      tags: [components]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - name: BikeTypeID
+          in: query
+          description: Bike type, the same as 'typeID' of the bike.
+          required: true
+          schema:
+            type: integer
+          example: 4
+      responses:
+        '200':
+          description: OK.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComponentType'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Component/Type/Advice:
+    get:
+      summary: Retrieve the maintenance advice for a component type.
+      tags: [components]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - name: BikeType
+          in: query
+          description: Bike type, the same as 'typeID' of the bike.
+          required: true
+          schema:
+            type: integer
+          example: 4
+        - name: GearType
+          in: query
+          description: Component type.
+          required: true
+          schema:
+            type: string
+          example: Chain Frame Protector
+      responses:
+        '200':
+          description: OK. Only empty bodies were observed.
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/Bikes/ServicesInProgress:
+    get:
+      summary: Retrieve the list of services in progress for the bike of the authenticated user.
+      tags: [services]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - $ref: '#/components/parameters/queryBikeId'
+      responses:
+        '200':
+          description: OK. Only empty lists were observed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
+  /Athlete/Notifications:
+    get:
+      summary: Retrieve the list of notifications of the authenticated user.
+      tags: [notifications]
+      parameters:
+        - $ref: '#/components/parameters/queryCode'
+        - name: page
+          in: query
+          description: Page number, starting from 0.
+          required: false
+          schema:
+            type: integer
+          example: 0
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -443,6 +663,14 @@ components:
       schema:
         type: integer
       example: 1836144
+    queryPage:
+      name: page
+      description: Page number.
+      in: query
+      required: false
+      schema:
+        type: integer
+      example: 1
 
   schemas:
     WithBikeID:
@@ -700,15 +928,12 @@ components:
             components:
               type: array
               items:
-                type: object
-                properties:
-                  schema:
-                    allOf:
-                      - $ref: '#/components/schemas/ComponentBase'
-                      - type: object
-                        properties:
-                          gearID:
-                            type: integer
+                allOf:
+                  - $ref: '#/components/schemas/ComponentBase'
+                  - type: object
+                    properties:
+                      gearID:
+                        type: integer
     Service:
       type: object
       additionalProperties: false
@@ -779,6 +1004,45 @@ components:
           type: array
           items:
             type: object
+            additionalProperties: false
+            properties:
+              gearID:
+                description: Unique identifier of the component.
+                type: integer
+                example: 5504922
+              replaced:
+                type: boolean
+              gearTypeID:
+                type: integer
+                example: 0
+              gearType:
+                description: Component type.
+                type: string
+                nullable: true
+                example: Sealant
+              manufacturer:
+                description: Component manufacturer.
+                type: string
+                example: Giant
+              model:
+                description: Component model.
+                type: string
+                example: Tire Sealant
+              description:
+                type: string
+              mileage:
+                description: Mileage of the component at the time of the service.
+                type: integer
+                example: 7664
+              rideHours:
+                type: integer
+              dateAdded:
+                description: Date added to the bike.
+                type: string
+                format: date-time
+                example: 2026-03-20T00:00:00
+              mileageBased:
+                type: boolean
         mileage:
           description: Mileage of the bike at the time of the service.
           type: integer
@@ -822,6 +1086,168 @@ components:
         statusDescription:
           type: string
           example: Created
+    BikeComponent:
+      allOf:
+        - $ref: "#/components/schemas/WithBikeID"
+        - type: object
+          additionalProperties: false
+          properties:
+            id:
+              description: Unique identifier of the component.
+              type: integer
+              example: 5354652
+            status:
+              type: string
+              enum:
+                - Active
+            type:
+              description: Component type.
+              type: string
+              example: Shifters
+            typeID:
+              type: integer
+              example: 14
+            manufacturer:
+              description: Component manufacturer.
+              type: string
+              example: SRAM
+            model:
+              description: Component model.
+              type: string
+              example: Right Controller Rival ED-RIV-D1
+            note:
+              type: string
+            dateAdded:
+              description: |
+                Date added to the bike.
+                ISO 8601 in lists (2024-04-25T00:00:00), long date in details (Saturday, October 26, 2024).
+              type: string
+              example: 2024-04-25T00:00:00
+            openingKm:
+              type: integer
+            openingHours:
+              type: integer
+            totalKm:
+              type: integer
+              example: 15847
+            totalHours:
+              type: integer
+              example: 571
+            kmSinceLastService:
+              description: Mileage since the last service in km.
+              type: integer
+              example: 13483
+            hoursSinceLastService:
+              description: Total duration of the ride since the last service in hours.
+              type: integer
+              example: 484
+            monthsSinceLastService:
+              description: Months since the last service.
+              type: integer
+              example: 19
+            lastService:
+              description: Last service date, in the same format as 'dateAdded'.
+              type: string
+              example: 2025-04-14T00:00:00
+            kmServiceIntervals:
+              description: Service intervals in km.
+              type: integer
+            hourServiceIntervals:
+              description: Service intervals in hours.
+              type: integer
+            kmToNextService:
+              description: Remaining mileage to the next service in km.
+              type: integer
+            hoursToNextService:
+              description: Remaining duration to the next service in hours.
+              type: integer
+            monthsToNextService:
+              description: Remaining months to the next service.
+              type: integer
+              example: 1
+            dueForService:
+              type: boolean
+            serviceScore:
+              type: integer
+              example: 5
+            default:
+              type: boolean
+            serviceInterval:
+              description: Service interval in serviceTimeframe.
+              type: integer
+              example: 20
+            serviceTimeframe:
+              type: string
+              nullable: true
+              enum:
+                - km
+                - months
+                - null
+            defaultComponent:
+              type: boolean
+            excludeRideKeywords:
+              type: string
+            lastRideDate:
+              description: Last ride date and time.
+              type: string
+              format: date-time
+              nullable: true
+              example: 2026-11-13T08:33:08
+            retiredDate:
+              type: string
+              format: date-time
+              nullable: true
+            invoiceLineItemID:
+              type: integer
+    ComponentType:
+      type: object
+      additionalProperties: false
+      properties:
+        gearTypeCategoryID:
+          type: integer
+          example: 2
+        gearTypeCategories:
+          description: Component type category.
+          type: string
+          example: Derailleurs
+        gearTypeID:
+          type: integer
+          example: 12
+        gearType:
+          description: Component type.
+          type: string
+          example: Front Derailleur
+        defaultServiceInterval_KM:
+          type: integer
+        defaultServiceInterval_Hours:
+          type: integer
+    Notification:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          description: Unique identifier of the notification.
+          type: integer
+          example: 27354032
+        title:
+          type: string
+          example: Strava Activity Updated
+        message:
+          type: string
+          example: We have updated your 'Morning Ride' ride, the ride is linked to your 'Giant Propel Advanced Pro 1'.
+        serviceID:
+          type: integer
+        statusID:
+          type: integer
+        partnerID:
+          type: integer
+        jobCardID:
+          type: integer
+          nullable: true
+        createdDate:
+          type: string
+          format: date-time
+          example: 2026-11-13T11:24:25.023
 
   responses:
     400BadRequest:
